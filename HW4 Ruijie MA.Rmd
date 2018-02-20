@@ -1,0 +1,58 @@
+---
+title: "HW 4"
+author: "Ruijie Ma"
+date: "2018/2/20"
+output: pdf_document
+---
+##10.5
+##1: The tibble does not have rownames and it adds the colnames automatically
+##2: A data.frame does partial mathching which tibble doesn't. A data.frame returns a factor and the tibble returns a data frame.
+##4:
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tibble)
+annoying <- tibble(
+  `1` = 1:10,
+  `2` = `1` * 2 + rnorm(length(`1`))
+)
+annoying$`1`
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+ggplot(annoying,aes(x=`1`,y=`2`)) + geom_point()
+
+annoying<-annoying %>% mutate(`3`=`2`/`1`)
+annoying
+
+annoying<-annoying%>%rename(one=`1`,two=`2`,three=`3`)
+```
+##5: enframe converts vectors and list to data.frame.It might be used when you are typing a list and want to use it as dataframe.
+##12.6
+##1:Yes, this is reasonable.There is a big difference between NA and 0 is that 0 will be counted as a vector.Therefore, it will changes the result of statistcal test.
+
+##2:without doing so, the colname can not be saperated because of the format inconsistency.
+
+##3:
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = T)
+tidyr::who
+who1<-who %>% gather(new_sp_m014,newrel_f65,key="key",value="cases",na.rm=T)
+who1
+who2<-who1 %>% select(-iso2,-iso3)
+who2
+```
+
+##4
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = T)
+gather(new_sp_m014:newrel_f65, na.rm = TRUE) %>% 
+  mutate(code = stringr::str_replace(code, "newrel", "new_rel")) %>%
+  separate(code, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+
+
+
+
