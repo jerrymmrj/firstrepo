@@ -1,0 +1,69 @@
+---
+title: "Part 1"
+author: "Ruijie Ma"
+date: "2018/3/17"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r setup???echo=TRUE}
+library(tidyverse)
+library(zoo)
+library(TSA)
+setwd("/Users/ruijie/Documents/ma415/Assignment5")
+data <- NULL
+time <- seq(1988,2017)
+time <- time[-26]
+n <- length(time)
+for (i in 1:n){
+  filename<-paste("46035h",time[i],".txt",sep = "")
+  tex<-read.table(filename,header = TRUE, fill = TRUE)
+  if(!is.null(data)){
+    names(tex)<-names(data)
+  }
+  if(length(tex[1,])==16|length(tex[1,])==17){
+    sub_tex<-tex[,c(1,2,3,4,13,14)]
+  }
+  if(length(tex[1,])==18){
+    sub_tex<-tex[,c(1,2,3,4,14,15)]
+  }
+  names(sub_tex)<-c('YY','MM','DD','hh','ATMP','WTMP')
+  data<-rbind(data,sub_tex)
+}
+data <- subset(data,data$ATMP!=999&data$WTMP!=999)
+daily <- data %>%
+group_by(MM,YY,DD)%>%
+summarise(ATMP=mean(ATMP),WTMP=mean(WTMP))
+daily[daily$YY<1999,]$YY<-daily[daily$YY<1999,]$YY+1900
+daily$time<-paste(daily$YY,"-",daily$MM,"-",daily$DD,sep = "")
+daily$time<-as.Date(daily$time,format = "%Y-%m-%d")
+ATMP<- with(daily, zoo(ATMP, time))
+WTMP<- with(daily, zoo(WTMP, time))
+
+plot(ATMP,main = "daily Air Temperature" )
+plot(WTMP,main = "Sea Air Temperature" )
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
