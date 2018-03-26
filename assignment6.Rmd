@@ -7,25 +7,56 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+library(magick)
 library(ggmap)
 library(tidyverse)
 library(ggplot2)
-geocode('town of Bude')
-map1=get_map(location = 'Bude,UK',maptype = 'roadmap',zoom = 14)
-map2=get_map(location = 'Bude,UK',maptype = 'watercolor',zoom = 14)
-beach1<-geocode('Crooklets Beach,UK')
-Beach2<-geocode('Summerleaze Beach')
-q<-route('Bude North Cornwall Cricket Club','Bar35 Bude',structure = "route")
-map3<-ggmap(map1)+geom_path(
-  aes(lon,lat), colour = "red", size = 1.5,
-  data = q, lineend = "round"
-)+geom_point(aes(x=-4.553962,y=50.83587),size=3,color='red')+geom_point(aes(x=-4.551349,y=50.83054),size=3,color='red')
-map4<-ggmap(map2)+geom_point(aes(x=-4.553962,y=50.83587),size=3,color='red')+geom_point(aes(x=-4.551349,y=50.83054),size=3,color='red')
-bar35<-geocode('Belle Vue Ln, Bude EX23 8BR, UK')
+## Map of Bude
+a<-get_map(location ='Bude UK', maptype = "roadmap", zoom = 14)
+b<-get_map(location='Bude UK', maptype = "watercolor", zoom = 14)
+beach1<-geocode('Crooklets Beach UK')
+beach2<-geocode('Summerleaze Cres, Bude EX23 8HN UK')
+cri<- geocode('S W Coast Path, Bude EX23 8HN UK')
+pub <- geocode('Belle Vue Ln, Bude EX23 8BR UK')
+data1<- rbind(pub,cri,beach1,beach2)
+location<-c("Bar35","Cricket Club","Crooklets Beach","Summerleaze Beach")
+data2<-cbind(data1,location)
+q<-route('S W Coast Path, Bude EX23 8HN, UK','Bar35 Bude',structure = "route")
+map3<- ggmap(a)+geom_path(
+aes(x=lon,y=lat), colour = "red", size = 1.5,
+data = q, lineend = "round") + geom_point(aes(x=lon,y=lat,col=location),size=3,data=data2) + print(ggtitle("Roadmap of Bude"))
 
+##watercolor map
+
+map4<-ggmap(b)+geom_path(
+aes(x=lon,y=lat), colour = "red", size = 1.5,
+data = q, lineend = "round") + geom_point(aes(x=lon,y=lat,col=location),size=3,data=data2) + print(ggtitle("Roadmap of Bude"))
+print(map4)
+saveRDS(map3, "roadmap.RDS")
+saveRDS(map4, "watercolormap.RDS")
+```
+
+```{r images}
+#Images of crooklet Beach#
+crookletBeach <- image_scale(image_read('https://www.visitbude.info/wp-content/uploads/2016/07/Crooklets-Beach-Huts-1.jpg', "x275"))
+print(crookletBeach)
+
+image_write(crookletBeach, "crooklet Beach.jpg", format="jpg")
+
+SummerleazeBeach <- image_scale(image_read('http://incornwall.info/wp-content/gallery/beaches/summerleaze_7054.jpg', "x275"))
+print(SummerleazeBeach)
+
+image_write(SummerleazeBeach, "SummerleazeBeach.jpg", format="jpg")
+
+Budecricket <- image_scale(image_read('http://l7.alamy.com/zooms/7c3fefeab6d74a80a329e43c69883f70/a-game-of-cricket-between-bude-and-lanhydrock-at-bude-north-cornwall-ewn01a.jpg', "x275"))
+print(Budecricket)
+
+image_write(Budecricket, "Budecricket.jpg", format = "jpg")
+
+Bar35bude <- image_scale(image_read('https://lh3.googleusercontent.com/c4So109X87tYCV9YnQMEoUlFk06Kjln-wqEWLsho4nw7sdbmsvgKBIDIhGZuCyJstBhN-3Wu3RwurP1D=s500', "x275"))
+print(Bar35bude)
+
+image_write(Bar35bude, "Bar35bude.jpg", format = "jpg")
 
 ```
 
-```{r include=TRUE}
-map3
-```
