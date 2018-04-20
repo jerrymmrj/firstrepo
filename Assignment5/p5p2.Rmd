@@ -1,0 +1,155 @@
+---
+title: "P5p2"
+author: "Han Xiao"
+date: "3/18/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(knitr)
+library(rmarkdown)
+library(tidyverse)
+library(zoo)
+library(foreign)
+data <- NULL
+time <- seq(1988,2017)
+time
+time <- time[-26]
+time
+n <- length(time)
+for (i in 1:n){
+  filename<-paste("weatherdata/46035h",time[i],".txt",sep = "")
+  tex<-read.table(filename,header = TRUE, fill = TRUE)
+  if(!is.null(data)){
+    names(tex)<-names(data)
+  }
+  if(length(tex[1,])==16|length(tex[1,])==17){
+    sub_tex<-tex[,c(1,2,3,4,13,14)]
+  }
+  if(length(tex[1,])==18){
+    sub_tex<-tex[,c(1,2,3,4,14,15)]
+  }
+  names(sub_tex)<-c('YY','MM','DD','hh','ATMP','WTMP')
+  data<-rbind(data,sub_tex)
+}
+data <- subset(data,data$ATMP!=999&data$WTMP!=999)
+daily <- data %>%
+group_by(MM,YY,DD)%>%
+summarise(ATMP=sample(ATMP,size = 1),WTMP=sample(WTMP,size = 1))
+daily[daily$YY<1999,]$YY<-daily[daily$YY<1999,]$YY+1900
+daily$time<-paste(daily$YY,"-",daily$MM,"-",daily$DD,sep = "")
+daily$time<-as.Date(daily$time,format = "%Y-%m-%d")
+
+View(daily)
+
+year1<-daily[daily$YY==1988,]
+year2<-daily[daily$YY==2017,]
+sample1<-sample(year1$ATMP,size=100)
+sample2<-sample(year2$ATMP,size=100)
+sample3<-sample(year1$WTMP,size=100)
+sample4<-sample(year2$WTMP,size=100)
+test1<-t.test(sample1,sample2)
+test2<-t.test(sample3,sample4)
+
+#analysis
+year <- function(x) as.POSIXlt(x)$year + 1900
+qplot(time,ATMP, data = daily, geom = "line",main = "The daily tempreature",colour=year(time))
+#options(error = traceback)
+qplot(x=time,y=WTMP, data = daily, geom = "line",main = "The sea tempreature",colour=year(time))
+library(ggplot2)
+
+time2 = as.numeric((time))
+is.numeric(time2)
+
+
+ggplot(data = daily,aes(x = time,y=WTMP,color = year(time)))+geom_line()+coord_cartesian(xlim = c(as.Date(1,origin="1988-01-01"),as.Date(1000,origin="1988-01-01")),expand = FALSE)
+
+
+#as.Date.numeric(time[3])
+#time[1]
+test1
+
+
+test2
+```
+In this case, we randomly select 100 samples from 1988 and 2017 to do the t-test for identifying the change of daily and sea tempreture over around 30 years.The test1 is about daily tempreture,as we can see,the p-value of both test is smaller than 1% which means that the significance the difference is statistically significant.Therefore, the mean tempreature changes over 30 years
+The sampling does light effect to the evaluation of tempreature change since the tempreature is different each days or hours. Analyze them by random selecting creates some difference but the general trend will not be changed.
+
+
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(stringr)
+
+
+
+veg1 <- read_xlsx("veg1.xlsx")
+
+
+##Data Cleaning & tidy
+a <- apply(veg1, 2, n_distinct)
+c <- names(a[a>1])
+
+veg2 <- select(veg1, c)
+apply(veg2, 2, n_distinct)
+
+veg.tidy <- veg2 %>%
+  dplyr::rename(Area = `Geo Level`, State = `State ANSI`,
+                Data = `Data Item`, Category = `Domain Category`) %>%
+  separate(Category, into = c("Label", "Type"), sep=",") %>%
+  separate(Data, into=c("A","Class Desc"),sep=" - ") %>%
+  separate(`Class Desc`, into=c("Class Desc","Production Practice","Unit Desc"),sep=",") %>%
+  separate(`Production Practice`,into=c("Production Practice","Utilization Practice","Statistic Category"),sep=" / ") %>%
+  separate(Domain,into=c("Domain","B"),sep=", ") %>%
+  dplyr::rename(Type=`B`,Chemical=`Type`) %>%
+  separate(Chemical, into=c("C","Active Ingredient or Action Taken"),sep=": ") %>%
+  separate(`Active Ingredient or Action Taken`, into=c("D","Active ingredient or Action Taken","E"),sep=c(1,-2)) %>%
+  separate(`Active ingredient or Action Taken`, into=c("Active ingredient or Action Taken","EPA Pesticide Chemical Code"),sep="=") %>%
+  separate(Area,into=c("Area","G"),sep=" : ") %>%
+  select(-A,-Label,-C,-D,-E,-G)
+
+
+##Restricted use chemical
+
+veg4 <- veg.tidy %>%
+  filter(Domain=="RESTRICTED USE CHEMICAL") %>%
+  select(Commodity, Domain:`EPA Pesticide Chemical Code`) %>%
+  unique()
+
+
+##toxicity measurement
+toxicity <- tibble(
+  `Toxicity Measurements(mg/kg)` =
+    c(20, 5620, 20, 11,
+      869, 54, 5000, 82,
+      869, 3129, 458, 450,
+      14, 12, 50, 50,
+      430, 1563, 86,380,
+      54, 5000, 3129, 458,
+      450, 144, 12, 50,
+      50, 430, 1563, 86,
+      300, 60, 1.9, 72.1,
+      82, 869, 150, 300,
+      4640, 56, 16, 73,
+      1.9, 56, 73, 121
+    )
+)
+veg4 <- veg4 %>%
+  bind_cols(toxicity)
+
+bro<-filter(veg4,Commodity=="BROCCOLI")
+cau<-filter(veg4,Commodity=="CAULIFLOWER")
+graph1<-ggplot(data=bro,mapping=aes(x=`Active ingredient or Action Taken`,
+                                    y=`Toxicity Measurements(mg/kg)`))+labs(title = "Broccoli")+
+  geom_bar(stat = "identity")+coord_flip()
+graph2<-ggplot(data=cau,mapping=aes(x=`Active ingredient or Action Taken`,
+                                    y=`Toxicity Measurements(mg/kg)`))+labs(title = "Cauliflower")+
+  geom_bar(stat = "identity")+coord_flip()
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

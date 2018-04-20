@@ -1,0 +1,13 @@
+name: assignment5
+title: assignment5
+username:
+account: xiaohan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 303150
+bundleId: 1277780
+url: https://xiaohan.shinyapps.io/assignment5/
+when: 1521514611.78647
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: as5p2slide.md|as5p2slide.Rpres|assignment5p2slide.Rmd|new_dash.zip|p5p2.Rmd|presentation 5.Rpres|veg clean - describe - 2 -- class 19(1).R|veg clean - describe - 2.R|未命名文件夹.zip|as5p2slide-figure/unnamed-chunk-2-1.png|new_dash/class_dash.R

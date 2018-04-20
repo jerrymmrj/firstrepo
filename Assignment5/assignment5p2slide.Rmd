@@ -1,0 +1,72 @@
+---
+title: "Slidesforpart2"
+author: "Han Xiao"
+date: "3/19/2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## original veg1
+
+```{r}
+veg1 <- read_xlsx("/Users/billyxiao/schoolworks/spring2018/ma415/MA415/assignment5/veg1.xlsx")
+
+
+##Data Cleaning & tidy
+a <- apply(veg1, 2, n_distinct)
+c <- names(a[a>1])
+
+veg2 <- select(veg1, c)
+apply(veg2, 2, n_distinct)
+
+veg.tidy <- veg2 %>%
+  dplyr::rename(Area = `Geo Level`, State = `State ANSI`,
+                Data = `Data Item`, Category = `Domain Category`) %>%
+  separate(Category, into = c("Label", "Type"), sep=",") %>%
+  separate(Data, into=c("A","Class Desc"),sep=" - ") %>%
+  separate(`Class Desc`, into=c("Class Desc","Production Practice","Unit Desc"),sep=",") %>%
+  separate(`Production Practice`,into=c("Production Practice","Utilization Practice","Statistic Category"),sep=" / ") %>%
+  separate(Domain,into=c("Domain","B"),sep=", ") %>%
+  dplyr::rename(Type=`B`,Chemical=`Type`) %>%
+  separate(Chemical, into=c("C","Active Ingredient or Action Taken"),sep=": ") %>%
+  separate(`Active Ingredient or Action Taken`, into=c("D","Active ingredient or Action Taken","E"),sep=c(1,-2)) %>%
+  separate(`Active ingredient or Action Taken`, into=c("Active ingredient or Action Taken","EPA Pesticide Chemical Code"),sep="=") %>%
+  separate(Area,into=c("Area","G"),sep=" : ") %>%
+  select(-A,-Label,-C,-D,-E,-G)
+
+
+##Restricted use chemical
+
+veg4 <- veg.tidy %>%
+  filter(Domain=="RESTRICTED USE CHEMICAL") %>%
+  select(Commodity, Domain:`EPA Pesticide Chemical Code`) %>%
+  unique()
+
+
+##toxicity measurement
+toxicity <- tibble(
+  `Toxicity Measurements` =
+    c("20-150 mg/kg", "5620-8350 mg/kg", "20-150 mg/kg", "11 mg/kg",
+      "869-1271 mg/kg", "54-70 mg/kg", "5000 mg/kg", "82-270 mg/kg",
+      "869-1271 mg/kg", "3129 mg/kg", "458 mg/kg", "450 mg/kg",
+      "144 mg/kg", "12-48 mg/kg", "50-281 mg/kg", "50 mg/kg",
+      "430-4000 mg/kg", "1563 mg/kg", "86 mg/kg", "380-651 mg/kg",
+      "54-70 mg/kg", "5000 mg/kg", "3129 mg/kg", "458 mg/kg",
+      "450 mg/kg", "144 mg/kg", "12-48 mg/kg", "50-281 mg/kg",
+      "50 mg/kg", "430-4000 mg/kg", "1563 mg/kg", "86 mg/kg",
+      "300-400 mg/kg", "60-387 mg/kg", "1.9-12.5 mg/kg", "72.1 mg/kg",
+      "82-270 mg/kg", "869-1271 mg/kg", "150-500 mg/kg", "300-400 mg/kg",
+      "4640 mg/kg", "56-79 mg/kg", "16-21 mg/kg", "73-79 mg/kg",
+      "1.9-12.5 mg/kg", "56-79 mg/kg", "73-79 mg/kg", "121 mg/kg"
+    )
+)
+
+veg4 <- veg4 %>%
+  bind_cols(toxicity)
+
+```
+
+

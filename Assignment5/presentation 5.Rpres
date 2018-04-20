@@ -1,0 +1,92 @@
+Tempreature study of station 46035
+========================================================
+author:Ruijie Ma,Han Xiao,Tianlang Yang
+date: 3/18/2018
+autosize: true
+
+Preview
+========================================================
+
+- graph analysis
+- statistical analysis
+- answer of question from assignment5
+
+Graph of daily tempreature
+========================================================
+```{r analysis,echo=FALSE}
+library(knitr)
+library(rmarkdown)
+library(tidyverse)
+library(zoo)
+
+data <- NULL
+time <- seq(1988,2017)
+time <- time[-26]
+n <- length(time)
+
+for (i in 1:n){
+  filename<-paste("weatherdata/46035h",time[i],".txt",sep = "")
+  tex<-read.table(filename,header = TRUE, fill = TRUE)
+  if(!is.null(data)){
+    names(tex)<-names(data)
+  }
+  if(length(tex[1,])==16|length(tex[1,])==17){
+    sub_tex<-tex[,c(1,2,3,4,13,14)]
+  }
+  if(length(tex[1,])==18){
+    sub_tex<-tex[,c(1,2,3,4,14,15)]
+  }
+  names(sub_tex)<-c('YY','MM','DD','hh','ATMP','WTMP')
+  data<-rbind(data,sub_tex)
+}
+data <- subset(data,data$ATMP!=999&data$WTMP!=999)
+daily <- data %>%
+group_by(MM,YY,DD)%>%
+summarise(ATMP=sample(ATMP,size = 1),WTMP=sample(WTMP,size = 1))
+daily[daily$YY<1999,]$YY<-daily[daily$YY<1999,]$YY+1900
+daily$time<-paste(daily$YY,"-",daily$MM,"-",daily$DD,sep = "")
+daily$time<-as.Date(daily$time,format = "%Y-%m-%d")
+
+
+year1<-daily[daily$YY==1988,]
+year2<-daily[daily$YY==2017,]
+sample1<-sample(year1$ATMP,size=100)
+sample2<-sample(year2$ATMP,size=100)
+sample3<-sample(year1$WTMP,size=100)
+sample4<-sample(year2$WTMP,size=100)
+test1<-t.test(sample1,sample2)
+test2<-t.test(sample3,sample4)
+year <- function(x) as.POSIXlt(x)$year + 1900
+qplot(time,ATMP, data = daily, geom = "line",main = "The daily tempreature",colour=year(time))
+```
+
+Graph of sea tempreatrue
+========================================================
+
+```{r, echo=FALSE}
+qplot(time,WTMP, data = daily, geom = "line",main = "The sea tempreature",colour=year(time))
+```
+Analysis
+========================================================
+
+##As we can see from the graphs, there is a obvious increase of both daily and see tempreture between 2011 to 2015
+
+T-test
+========================================================
+## t-test of daily tempreature samples
+```{r, echo=FALSE}
+test1
+```
+T-test
+========================================================
+## t-test of daily tempreature samples
+```{r, echo=FALSE}
+test2
+```
+Analysis
+========================================================
+## In this case, we randomly select 100 samples from 1988 and 2017 to do the t-test for identifying the change of daily and sea tempreture over around 30 years.The test1 is about daily tempreture,as we can see,the p-value of both test is smaller than 1% which means that the significance the difference is statistically significant.Therefore, the mean tempreature changes over 30 years
+
+Answer to the question
+========================================================
+## The sampling does light effect to the evaluation of tempreature change since the tempreature is different each days or hours. Analyze them by random selecting creates some difference but the general trend will not be changed.
