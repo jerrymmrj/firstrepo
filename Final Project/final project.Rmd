@@ -1,0 +1,56 @@
+---
+title: "Final project"
+author: "Ruijie Ma"
+date: "2018/5/6"
+output: pdf_document
+---
+## datacleaning
+##In this project, I have used skills that I learnt from this class including tidyverse,ggplot,shinny app.I follows the guideline that using real time data to do analyzation. My topic is about effect that governmental regulation towards the price of Bitcoin which is a digital currency. I choose to use the api from Alphavantage which is a set of real time data including open price, daily high and low and volume and these factors can be found in the shinny sidebar.about the Bitcoin's price in both USD and CNY. I delete the part of USD since double currency would make the scale of the graph chaotic. I choose to analyze with CNY because it has relatively lower value of exchange rate which make the change more obvious on the graph. I consider that the governmental regulation does influence the price of Bitcoin and my study confirms this point. We will see the change of South Korean's regulation towards Bitcoin in this year in the graph that creates a lowest open price of Bitcoins in recent two years.This R project shows only the data cleanning part and others are showed in the shinny app.
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(shiny)
+library(ggplot2)
+library(tidyverse)
+library(shinythemes)
+library(shinydashboard)
+library(curl)
+library(jsonlite)
+
+url<-'https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=BTC&market=CNY&apikey=7UZIED5JPZSAQMPT'
+
+data1 <- read_json(url,format="jsonl")
+
+thedata<-lapply(data1$`Time Series (Digital Currency Daily)`,unlist)
+
+thedata<-as.data.frame(thedata)
+
+thedata<-t(thedata)
+
+thedata<-thedata[,-c(2,4,6,8,10)]
+
+col_names<-colnames(thedata)
+
+col_names<-unlist(lapply(col_names,function(x){
+  temp<-unlist(strsplit(x,"[.]"))
+  temp[2]
+}))
+
+col_names<-gsub(" ","",col_names)
+
+col_names<-gsub("[(]","_",col_names)
+
+col_names<-gsub("[)]","",col_names)
+
+time<-rownames(thedata)
+
+time<-gsub("X","",time)
+
+time<-as.Date(gsub("[.]","-",time),format="%Y-%m-%d")
+mydata<-data.frame(thedata)
+
+names(mydata)<-col_names
+
+mydata$time<-time
+
+mydata[,1:5]<-apply(mydata[,1:5],1,as.numeric)
+```
